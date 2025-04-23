@@ -1,0 +1,85 @@
+<script>
+	//Простой GET запрос 
+	fetch('https://jsonplaceholder.typicode.com/posts/1')
+		.then(response => response.json()) // Преобразуем ответ из JSON в объект
+		.then(data => console.log(data))
+		.catch(error => console.error('Ошибка:', error));
+
+	//POST запрос 
+	fetch('https://jsonplaceholder.typicode.com/posts/', {
+		method: 'POST', 
+		headers: {
+			'Content-Type': 'application/json' // Указываем, что передаем JSON
+		},
+		body: JSON.stringify({ title: 'Fetch API', body: 'Описание', userId: 1 }) 
+	})
+		.then(response => response.json()) 
+		.then(data => console.log('Созданный пост:', data))
+		.catch(error => console.error('Ошибка:', error));
+
+	//Обработка ошибок 404 или 500
+	fetch('https://jsonplaceholder.typicode.com/posts/10000')
+		.then(response => {
+			if (!response.ok) {
+				throw new Error(`Ошибка HTTP: ${response.status}`);
+			}
+			return response.json();
+		})
+		.then(data => console.log(data))
+		.catch(error => console.error('Ошибка:', error));
+
+	// Отправка массива объектов (если сервер поддерживает)
+	fetch('https://jsonplaceholder.typicode.com/posts', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify([
+			{ title: 'Первый пост', body: 'Содержимое 1', userId: 1 },
+			{ title: 'Второй пост', body: 'Содержимое 2', userId: 2 },
+			{ title: 'Третий пост', body: 'Содержимое 3', userId: 3 }
+		])
+	})
+		.then(response => response.json())
+		.then(data => console.log('Созданные посты:', data))
+		.catch(error => console.error('Ошибка:', error));
+
+	
+	const posts = [
+		{ title: 'Первый пост', body: 'Содержимое 1', userId: 1 },
+		{ title: 'Второй пост', body: 'Содержимое 2', userId: 2 },
+		{ title: 'Третий пост', body: 'Содержимое 3', userId: 3 }
+	];
+
+	// Отправка нескольких отдельных запросов
+	// Если API не поддерживает массивы, отправляем три запроса подряд:
+	posts.forEach(post => {
+		fetch('https://jsonplaceholder.typicode.com/posts', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(post)
+		})
+			.then(response => response.json())
+			.then(data => console.log('Создан пост:', data))
+			.catch(error => console.error('Ошибка:', error));
+	});
+
+	// Отправка всех запросов одновременно (Promise.all)
+	// Если нужно отправить все запросы одновременно и дождаться их завершения:
+	Promise.all(
+		posts.map(post =>
+			fetch('https://jsonplaceholder.typicode.com/posts', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(post)
+			}).then(response => response.json())
+		)
+	)
+		.then(results => console.log('Созданные посты:', results))
+		.catch(error => console.error('Ошибка:', error));
+
+</script>

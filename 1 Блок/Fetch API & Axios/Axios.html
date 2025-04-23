@@ -1,0 +1,74 @@
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+	// GET запрос  
+	axios.get('https://jsonplaceholder.typicode.com/posts/1')
+		.then(response => {
+			console.log('Ответ от сервера:', response.data);
+		})
+		.catch(error => {
+			console.error('Ошибка:', error);
+		});
+
+	// POST запрос
+	axios.post('https://jsonplaceholder.typicode.com/posts', {
+		title: 'Новый пост',
+		body: 'Содержимое поста',
+		userId: 1
+	})
+		.then(response => {
+			console.log('Созданный пост:', response.data);
+		})
+		.catch(error => {
+			console.error('Ошибка:', error);
+		});
+
+	// Передача параметров в запросах (Query Params)
+	// Будет как https://jsonplaceholder.typicode.com/posts?userId=1
+	// Добавляется ?userId=1
+	axios.get('https://jsonplaceholder.typicode.com/posts', {
+		params: {
+			userId: 1
+		}
+	})
+		.then(response => {
+			console.log('Посты пользователя:', response.data);
+		})
+		.catch(error => {
+			console.error('Ошибка:', error);
+		});
+
+	// Обработка ошибок в Axios
+	axios.get('https://jsonplaceholder.typicode.com/invalid-url')
+		.then(response => {
+			console.log('Ответ:', response.data);
+		})
+		.catch(error => {
+			console.error('Произошла ошибка:', error.response || error);
+		});
+
+	// Устанавливаем глобальный базовый URL
+	axios.defaults.baseURL = 'https://jsonplaceholder.typicode.com';
+
+	axios.get('/posts/1') // Базовый URL уже установлен, поэтому пишем только путь
+		.then(response => {
+			console.log('Ответ от сервера:', response.data);
+		})
+		.catch(error => {
+			console.error('Ошибка:', error);
+		});
+
+	// Разные экземпляры Axios
+	const api1 = axios.create({
+		baseURL: 'https://jsonplaceholder.typicode.com'
+	});
+
+	const api2 = axios.create({
+		baseURL: 'https://another-api.com'
+	});
+
+	// Теперь можно делать запросы к разным API
+	api1.get('/posts/1').then(res => console.log('API 1:', res.data));
+	api2.get('/data').then(res => console.log('API 2:', res.data));
+
+</script>

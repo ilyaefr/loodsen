@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <title>IndexedDB CRUD</title>
+</head>
+
+<body>
+  <h1>Все в консоли</h1>
+
+  <script>
+    const dbName = "MyDatabase";
+    const storeName = "users";
+
+    // Открытие базы
+    const request = indexedDB.open(dbName, 1);
+
+    request.onupgradeneeded = function (event) {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(storeName)) {
+        db.createObjectStore(storeName, { keyPath: "id", autoIncrement: true });
+        console.log("Хранилище 'users' создано");
+      }
+    };
+
+    request.onsuccess = function (event) {
+      const db = event.target.result;
+      console.log("База данных открыта");
+
+      // Также можно сделать очистку
+      const transaction = db.transaction(storeName, "readwrite");
+      const store = transaction.objectStore(storeName);
+      store.clear().onsuccess = () => {          
+        console.log("Все пользователи удалены");
+      };
+
+      // Добавляем 3 пользователей
+      createUser(db, { name: "Алекс", age: 25 });
+      createUser(db, { name: "Мария", age: 30 });
+      createUser(db, { name: "Иван", age: 22 });
+
+      // Пошаговые действия с паузами
+      setTimeout(() => readAllUsers(db), 500);
+      setTimeout(() => readUserById(db, 2), 1000);               
+      setTimeout(() => updateUser(db, 1, { name: "Алексей", age: 26 }), 1500);
+      setTimeout(() => deleteUser(db, 3), 2000);
+      setTimeout(() => readAllUsers(db), 2500);
+
+      // setTimeout(() => indexedDB.deleteDatabase("MyDatabase"), 5500); // Также можно удалять всю базу данных, например при тестировани 
+    };
+
+    request.onerror = function () {
+      console.error("Ошибка при открытии базы данных");
+    };
+
+    // CREATE
+    function createUser(db, user) {
+      const transaction = db.transaction(storeName, "readwrite");
+      const store = transaction.objectStore(storeName);
+
+      const addRequest = store.add(user);
+      addRequest.onsuccess = (e) => {
+        console.log("Добавлен пользователь с ID:", e.target.result, user);
+      };
+      addRequest.onerror = () => {
+        console.error("Ошибка при добавлении пользователя");
+      };
+    }
+
+    // READ ALL
+    function readAllUsers(db) {
+      const transaction = db.transaction(storeName, "readonly");
+      const store = transaction.objectStore(storeName);
+
+      const getAllRequest = store.getAll();
+      getAllRequest.onsuccess = (e) => {
+        console.log("Все пользователи:", e.target.result);
+      };
+      getAllRequest.onerror = () => {
+        console.error("Ошибка при получении всех пользователей");
+      };
+    }
+
+    // READ ONE
+    function readUserById(db, id) {
+      const transaction = db.transaction(storeName, "readonly");
+      const store = transaction.objectStore(storeName);
+
+      const getRequest = store.get(id);
+      getRequest.onsuccess = () => {
+        const user = getRequest.result;
+        if (user) {
+          console.log(`Пользователь с ID ${id}:`, user);
+        } else {
+          console.error(`Пользователь с ID ${id} не найден`); 
+        }
+      };
+      getRequest.onerror = () => {
+        console.error(`Ошибка при получении пользователя с ID ${id}`);
+      };
+    }
+
+    // UPDATE
+    function updateUser(db, id, newData) {
+      const transaction = db.transaction(storeName, "readwrite");
+      const store = transaction.objectStore(storeName);
+
+      const getRequest = store.get(id);
+      getRequest.onsuccess = () => {
+        const user = getRequest.result;
+        if (!user) {
+          console.error(`Пользователь с ID ${id} не найден`);
+          return;
+        }
+
+        const updatedUser = { ...user, ...newData };
+        const updateRequest = store.put(updatedUser);
+
+        updateRequest.onsuccess = () => {
+          console.log(`Пользователь с ID ${id} обновлён:`, updatedUser);
+        };
+      };
+      getRequest.onerror = () => {
+        console.error("Ошибка при получении пользователя для обновления");
+      };
+    }
+
+    // DELETE с проверкой существования
+    function deleteUser(db, id) {
+      const transaction = db.transaction(storeName, "readwrite");
+      const store = transaction.objectStore(storeName);
+
+      const getRequest = store.get(id);
+
+      getRequest.onsuccess = function () {
+        const user = getRequest.result;
+
+        // Проверяем, существует ли пользователь с таким ID
+        if (user) {
+          // Если существует, то удаляем
+          const deleteRequest = store.delete(id);
+
+          deleteRequest.onsuccess = () => {
+            console.log(`Пользователь с ID ${id} удалён`);
+          };
+          deleteRequest.onerror = () => {
+            console.error("Ошибка при удалении пользователя");
+          };
+        } else {
+          console.error(`Пользователь с ID ${id} не найден`);
+        }
+      };
+
+      getRequest.onerror = function () {
+        console.error("Ошибка при получении пользователя для удаления");
+      };
+    }
+
+  </script>
+</body>
+
+</html>
